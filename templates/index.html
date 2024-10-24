@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SVG Drawing Interface with Fluid Simulation Features</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        #main-container {
+            display: flex;
+        }
+
+        /* Left Sidebar */
+        #left-sidebar {
+            width: 220px;
+            padding: 10px;
+            background-color: #f4f4f4;
+        }
+
+        /* Color Controls */
+        #color-controls {
+            margin-bottom: 20px;
+        }
+
+        #color-controls h3 {
+            margin-top: 0;
+        }
+
+        .color-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .color-button {
+            width: 20px;
+            height: 20px;
+            border: none;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+
+        .color-item label,
+        .color-item input {
+            margin-right: 5px;
+        }
+
+        .color-item input {
+            width: 60px;
+        }
+
+        /* Boundary Conditions */
+        #boundary-conditions h3 {
+            margin-top: 0;
+        }
+
+        .boundary-control {
+            margin-bottom: 10px;
+        }
+
+        .boundary-inputs {
+            display: none;
+            margin-left: 10px;
+        }
+
+        .boundary-inputs label,
+        .boundary-inputs input {
+            margin-right: 5px;
+        }
+
+        .boundary-inputs input {
+            width: 60px;
+        }
+
+        /* Right Content */
+        #right-content {
+            flex: 1;
+            padding: 10px;
+        }
+
+        /* File Controls */
+        #file-controls {
+            margin-bottom: 10px;
+            text-align: left;
+        }
+
+        #file-controls button,
+        #file-controls input {
+            margin-right: 5px;
+        }
+
+        /* Toolbar */
+        #toolbar {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #toolbar .tool-buttons {
+            display: flex;
+            align-items: center;
+        }
+
+        #toolbar .canvas-size-controls {
+            display: flex;
+            align-items: center;
+        }
+
+        #toolbar button,
+        #toolbar input {
+            margin-right: 5px;
+        }
+
+        /* Drawing Area */
+        #drawing-area {
+            border: 3px solid #000;
+            display: inline-block;
+            position: relative;
+            width: 800px;
+            height: 600px;
+        }
+
+        /* Below Canvas Controls */
+        #below-canvas-controls {
+            margin-top: 10px;
+        }
+
+        #below-canvas-controls button,
+        #below-canvas-controls input {
+            margin-right: 5px;
+        }
+    </style>
+    <!-- Include SVG.js from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3.1/dist/svg.min.js"></script>
+</head>
+<body>
+    <div id="main-container">
+        <!-- Left Sidebar -->
+        <div id="left-sidebar">
+            <!-- Color Controls -->
+            <div id="color-controls">
+                <h3>Colors</h3>
+                <!-- Color Items -->
+                <div class="color-item" data-color="#FF0000">
+                    <button class="color-button" style="background-color: red;"></button>
+                    <label>Mag:</label>
+                    <input type="number" class="color-magnitude" value="0">
+                    <label>Dir:</label>
+                    <input type="number" class="color-direction" value="0">
+                </div>
+                <div class="color-item" data-color="#FFA500">
+                    <button class="color-button" style="background-color: orange;"></button>
+                    <label>Mag:</label>
+                    <input type="number" class="color-magnitude" value="0">
+                    <label>Dir:</label>
+                    <input type="number" class="color-direction" value="0">
+                </div>
+                <div class="color-item" data-color="#FFFF00">
+                    <button class="color-button" style="background-color: yellow;"></button>
+                    <label>Mag:</label>
+                    <input type="number" class="color-magnitude" value="0">
+                    <label>Dir:</label>
+                    <input type="number" class="color-direction" value="0">
+                </div>
+                <div class="color-item" data-color="#008000">
+                    <button class="color-button" style="background-color: green;"></button>
+                    <label>Mag:</label>
+                    <input type="number" class="color-magnitude" value="0">
+                    <label>Dir:</label>
+                    <input type="number" class="color-direction" value="0">
+                </div>
+                <div class="color-item" data-color="#0000FF">
+                    <button class="color-button" style="background-color: blue;"></button>
+                    <label>Mag:</label>
+                    <input type="number" class="color-magnitude" value="0">
+                    <label>Dir:</label>
+                    <input type="number" class="color-direction" value="0">
+                </div>
+                <div class="color-item" data-color="#4B0082">
+                    <button class="color-button" style="background-color: indigo;"></button>
+                    <label>Mag:</label>
+                    <input type="number" class="color-magnitude" value="0">
+                    <label>Dir:</label>
+                    <input type="number" class="color-direction" value="0">
+                </div>
+                <div class="color-item" data-color="#EE82EE">
+                    <button class="color-button" style="background-color: violet;"></button>
+                    <label>Mag:</label>
+                    <input type="number" class="color-magnitude" value="0">
+                    <label>Dir:</label>
+                    <input type="number" class="color-direction" value="0">
+                </div>
+                <div class="color-item" data-color="#000000">
+                    <button class="color-button" style="background-color: black;"></button>
+                    <label>Mag:</label>
+                    <input type="number" class="color-magnitude" value="0">
+                    <label>Dir:</label>
+                    <input type="number" class="color-direction" value="0">
+                </div>
+                <div class="color-item" data-color="#FFFFFF">
+                    <button class="color-button" style="background-color: white; border: 1px solid #ccc;"></button>
+                    <label>Mag:</label>
+                    <input type="number" class="color-magnitude" value="0">
+                    <label>Dir:</label>
+                    <input type="number" class="color-direction" value="0">
+                </div>
+            </div>
+            <!-- Boundary Conditions -->
+            <div id="boundary-conditions">
+                <h3>Boundary Conditions</h3>
+                 <!-- Top Edge -->
+                 <div class="boundary-control">
+                    <label for="top-boundary">Top Edge:</label>
+                    <select id="top-boundary" onchange="toggleBoundaryInputs('top')">
+                        <option value="wall">Wall</option>
+                        <option value="velocity">Velocity</option>
+                    </select>
+                    <div id="top-boundary-inputs" class="boundary-inputs">
+                        <label for="top-magnitude">Mag (m/s):</label>
+                        <input type="number" id="top-magnitude" value="0">
+                        <br>
+                        <label for="top-direction">Dir (°):</label>
+                        <input type="number" id="top-direction" value="0">
+                    </div>
+                </div>
+                <!-- Bottom Edge -->
+                <div class="boundary-control">
+                    <label for="bottom-boundary">Bottom Edge:</label>
+                    <select id="bottom-boundary" onchange="toggleBoundaryInputs('bottom')">
+                        <option value="wall">Wall</option>
+                        <option value="velocity">Velocity</option>
+                    </select>
+                    <div id="bottom-boundary-inputs" class="boundary-inputs">
+                        <label for="bottom-magnitude">Mag (m/s):</label>
+                        <input type="number" id="bottom-magnitude" value="0">
+                        <br>
+                        <label for="bottom-direction">Dir (°):</label>
+                        <input type="number" id="bottom-direction" value="0">
+                    </div>
+                </div>
+                <!-- Left Edge -->
+                <div class="boundary-control">
+                    <label for="left-boundary">Left Edge:</label>
+                    <select id="left-boundary" onchange="toggleBoundaryInputs('left')">
+                        <option value="wall">Wall</option>
+                        <option value="velocity">Velocity</option>
+                    </select>
+                    <div id="left-boundary-inputs" class="boundary-inputs">
+                        <label for="left-magnitude">Mag (m/s):</label>
+                        <input type="number" id="left-magnitude" value="0">
+                        <br>
+                        <label for="left-direction">Dir (°):</label>
+                        <input type="number" id="left-direction" value="0">
+                    </div>
+                </div>
+                <!-- Right Edge -->
+                <div class="boundary-control">
+                    <label for="right-boundary">Right Edge:</label>
+                    <select id="right-boundary" onchange="toggleBoundaryInputs('right')">
+                        <option value="wall">Wall</option>
+                        <option value="velocity">Velocity</option>
+                    </select>
+                    <div id="right-boundary-inputs" class="boundary-inputs">
+                        <label for="right-magnitude">Mag (m/s):</label>
+                        <input type="number" id="right-magnitude" value="0">
+                        <br>
+                        <label for="right-direction">Dir (°):</label>
+                        <input type="number" id="right-direction" value="0">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Right Content -->
+        <div id="right-content">
+            <!-- File Controls -->
+            <div id="file-controls">
+                <label for="file-name">File Name:</label>
+                <input type="text" id="file-name" value="output.svg" style="width: 120px;">
+                <button onclick="saveSVG()">Save SVG</button>
+                <button onclick="loadSVG()">Load SVG</button>
+                <input type="file" id="svg-file-input" accept=".svg" style="display: none;">
+            </div>
+            <!-- Toolbar -->
+            <div id="toolbar">
+                <div class="tool-buttons">
+                    <!-- Tool Buttons -->
+                    <button id="line-tool">Line</button>
+                    <button id="rect-tool">Rectangle</button>
+                    <button id="square-tool">Square</button>
+                    <button id="arc-tool">Bezier Curve</button>
+                    <button id="paint-tool">Paint</button>
+                    <button id="polyline-tool">Polyline</button>
+                    <button id="eraser-tool">Eraser</button>
+                    <!-- Fill Toggle -->
+                    <label for="fill-toggle">Fill:</label>
+                    <input type="checkbox" id="fill-toggle">
+                    <!-- Control Buttons -->
+                    <button onclick="clearCanvas()">Clear</button>
+                    <button onclick="undo()">Undo</button>
+                    <button onclick="redo()">Redo</button>
+                </div>
+                <div class="canvas-size-controls">
+                    <!-- Canvas Size Controls -->
+                    <label for="canvas-width">Width:</label>
+                    <input type="number" id="canvas-width" value="800" min="100" style="width: 60px;">
+                    <label for="canvas-height">Height:</label>
+                    <input type="number" id="canvas-height" value="600" min="100" style="width: 60px;">
+                    <button onclick="resizeCanvas()">Resize Canvas</button>
+                </div>
+            </div>
+            <!-- Drawing Area -->
+            <div id="drawing-area"></div>
+            <!-- Buttons Below the Canvas -->
+            <div id="below-canvas-controls">
+                <br>
+                <label for="test-file-name">File to Load:</label>
+                <input type="text" id="test-file-name" value="output.svg" style="width: 120px;">
+                <button onclick="testAboveGeometry()">Test Above Geometry</button>
+                <button onclick="simulate()">Simulate</button>
+            </div>
+        </div>
+    </div>
+    <!-- JavaScript Code -->
+    <script>
+        // Initialize SVG.js
+        let draw = SVG().addTo('#drawing-area').size(800, 600);
+        let isDrawing = false;
+        let startPoint = {};
+        let currentShape = null;
+        let selectedColor = '#000000';
+        let selectedTool = 'line';
+        let bezierPoints = [];
+        let polylinePoints = [];
+        let eraserRadius = 10;
+        let history = [];
+        let redoHistory = [];
+        let fillShapes = false;
+
+        // Get DOM elements
+        const colorItems = document.querySelectorAll('.color-item');
+        const canvasWidthInput = document.getElementById('canvas-width');
+        const canvasHeightInput = document.getElementById('canvas-height');
+        const fileNameInput = document.getElementById('file-name');
+        const testFileNameInput = document.getElementById('test-file-name');
+        const drawingArea = document.getElementById('drawing-area');
+        const fillToggle = document.getElementById('fill-toggle');
+
+        // Tool Buttons Event Listeners
+        document.getElementById('line-tool').addEventListener('click', () => { selectedTool = 'line'; });
+        document.getElementById('rect-tool').addEventListener('click', () => { selectedTool = 'rect'; });
+        document.getElementById('square-tool').addEventListener('click', () => { selectedTool = 'square'; });
+        document.getElementById('arc-tool').addEventListener('click', () => { selectedTool = 'bezier'; bezierPoints = []; });
+        document.getElementById('paint-tool').addEventListener('click', () => { selectedTool = 'paint'; });
+        document.getElementById('polyline-tool').addEventListener('click', () => { selectedTool = 'polyline'; });
+        document.getElementById('eraser-tool').addEventListener('click', () => { selectedTool = 'eraser'; });
+
+        // Fill Toggle Event Listener
+        fillToggle.addEventListener('change', () => {
+            fillShapes = fillToggle.checked;
+        });
+
+        // Color Items Event Listeners
+        colorItems.forEach(item => {
+            const button = item.querySelector('.color-button');
+            button.addEventListener('click', () => {
+                selectedColor = item.getAttribute('data-color');
+            });
+        });
+
+        // Resize Canvas Function
+        function resizeCanvas() {
+            let width = parseInt(canvasWidthInput.value) || 800;
+            let height = parseInt(canvasHeightInput.value) || 600;
+            draw.size(width, height);
+            drawingArea.style.width = width + 'px';
+            drawingArea.style.height = height + 'px';
+        }
+
+        // Drawing Area Event Listeners
+        drawingArea.addEventListener('mousedown', function(event) {
+            // ... (existing code)
+            let rect = drawingArea.getBoundingClientRect();
+            let x = event.clientX - rect.left;
+            let y = event.clientY - rect.top;
+
+            if (selectedTool === 'eraser') {
+                if (event.target && event.target.nodeName !== 'svg') {
+                    event.target.remove();
+                    redoHistory = [];
+                }
+                return;
+            }
+
+            if (selectedTool === 'bezier') {
+                bezierPoints.push({ x: x, y: y });
+                if (bezierPoints.length === 3) {
+                    let pathData = `M ${bezierPoints[0].x} ${bezierPoints[0].y} Q ${bezierPoints[1].x} ${bezierPoints[1].y} ${bezierPoints[2].x} ${bezierPoints[2].y}`;
+                    let bezierCurve = draw.path(pathData)
+                        .fill(fillShapes ? selectedColor : 'none')
+                        .stroke({ width: 2, color: selectedColor });
+                    history.push(bezierCurve);
+                    redoHistory = [];
+                    bezierPoints = [];
+                }
+                return;
+            }
+
+            if (selectedTool === 'polyline') {
+                isDrawing = true;
+                polylinePoints = [[x, y]];
+                currentShape = draw.polyline(polylinePoints)
+                    .fill('none')
+                    .stroke({ width: 2, color: selectedColor });
+                history.push(currentShape);
+                redoHistory = [];
+                return;
+            }
+
+            if (selectedTool === 'paint') {
+                isDrawing = true;
+                currentShape = draw.path(`M ${x} ${y}`)
+                                .fill('none')
+                                .stroke({ width: 2, color: selectedColor });
+                history.push(currentShape);
+                redoHistory = [];
+                return;
+            }
+
+            isDrawing = true;
+            startPoint.x = x;
+            startPoint.y = y;
+
+            if (selectedTool === 'line') {
+                currentShape = draw.line(startPoint.x, startPoint.y, startPoint.x, startPoint.y)
+                                  .stroke({ width: 2, color: selectedColor });
+                history.push(currentShape);
+                redoHistory = [];
+            } else if (selectedTool === 'rect' || selectedTool === 'square') {
+                currentShape = draw.rect(0, 0)
+                                  .fill(fillShapes ? selectedColor : 'none')
+                                  .stroke({ width: 2, color: selectedColor })
+                                  .move(startPoint.x, startPoint.y);
+                history.push(currentShape);
+                redoHistory = [];
+            }
+        });
+
+        drawingArea.addEventListener('mousemove', function(event) {
+            // ... (existing code)
+            let rect = drawingArea.getBoundingClientRect();
+            let x = event.clientX - rect.left;
+            let y = event.clientY - rect.top;
+
+            if (selectedTool === 'eraser' && event.buttons) {
+                let target = document.elementFromPoint(event.clientX, event.clientY);
+                if (target && target.nodeName !== 'svg') {
+                    target.remove();
+                    redoHistory = [];
+                }
+                return;
+            }
+
+            if (!isDrawing || !currentShape) return;
+
+            if (selectedTool === 'polyline') {
+                polylinePoints.push([x, y]);
+                currentShape.plot(polylinePoints);
+                return;
+            }
+
+            if (selectedTool === 'line') {
+                currentShape.plot([[startPoint.x, startPoint.y], [x, y]]);
+            } else if (selectedTool === 'rect') {
+                currentShape.size(Math.abs(x - startPoint.x), Math.abs(y - startPoint.y))
+                            .move(Math.min(startPoint.x, x), Math.min(startPoint.y, y));
+            } else if (selectedTool === 'square') {
+                let size = Math.max(Math.abs(x - startPoint.x), Math.abs(y - startPoint.y));
+                let newX = startPoint.x + (x < startPoint.x ? -size : 0);
+                let newY = startPoint.y + (y < startPoint.y ? -size : 0);
+                currentShape.size(size, size).move(newX, newY);
+            } else if (selectedTool === 'paint') {
+                let pathData = currentShape.attr('d');
+                currentShape.plot(pathData + ` L ${x} ${y}`);
+            }
+        });
+
+        drawingArea.addEventListener('mouseup', function(event) {
+            // ... (existing code)
+            if (selectedTool === 'polyline' && currentShape) {
+                // Close the polyline
+                polylinePoints.push(polylinePoints[0]); // Close the shape
+                currentShape.plot(polylinePoints);
+                currentShape.fill(fillShapes ? selectedColor : 'none');
+                isDrawing = false;
+                currentShape = null;
+                polylinePoints = [];
+                return;
+            }
+
+            isDrawing = false;
+            currentShape = null;
+        });
+
+        function clearCanvas() {
+            draw.clear();
+            history = [];
+            redoHistory = [];
+        }
+
+        function undo() {
+            let lastElement = history.pop();
+            if (lastElement) {
+                lastElement.remove();
+                redoHistory.push(lastElement);
+            }
+        }
+
+        function redo() {
+            let element = redoHistory.pop();
+            if (element) {
+                draw.add(element);
+                history.push(element);
+            }
+        }
+
+        function getColorVelocities() {
+            const colorVelocities = {};
+            colorItems.forEach(item => {
+                const color = item.getAttribute('data-color');
+                const magnitude = parseFloat(item.querySelector('.color-magnitude').value);
+                const direction = parseFloat(item.querySelector('.color-direction').value);
+                colorVelocities[color] = { magnitude, direction };
+            });
+            return colorVelocities;
+        }
+
+        function toggleBoundaryInputs(edge) {
+            const select = document.getElementById(`${edge}-boundary`);
+            const inputs = document.getElementById(`${edge}-boundary-inputs`);
+            if (select.value === 'velocity') {
+                inputs.style.display = 'block';
+            } else {
+                inputs.style.display = 'none';
+            }
+        }
+
+        // Initialize boundary inputs display based on default values
+        ['top', 'bottom', 'left', 'right'].forEach(edge => {
+            toggleBoundaryInputs(edge);
+        });
+
+        function saveSVG(callback) {
+            let svgData = draw.svg();
+            let fileName = fileNameInput.value.trim() || 'output.svg';
+
+            // Collect boundary conditions
+            const boundaries = ['top', 'bottom', 'left', 'right'].reduce((acc, edge) => {
+                const type = document.getElementById(`${edge}-boundary`).value;
+                let condition = { type };
+                if (type === 'velocity') {
+                    condition.magnitude = parseFloat(document.getElementById(`${edge}-magnitude`).value);
+                    condition.direction = parseFloat(document.getElementById(`${edge}-direction`).value);
+                }
+                acc[edge] = condition;
+                return acc;
+            }, {});
+
+            fetch('/save_svg', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    svg: svgData,
+                    filename: fileName,
+                    boundaries: boundaries,
+                    colorVelocities: getColorVelocities()
+                })
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+                if (callback) callback();
+            });
+        }
+
+        function loadSVG() {
+            const fileInput = document.getElementById('svg-file-input');
+            fileInput.click();
+            fileInput.onchange = () => {
+                const file = fileInput.files[0];
+                if (file && file.type === 'image/svg+xml') {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const svgContent = e.target.result;
+                        draw.clear();
+                        draw.svg(svgContent);
+
+                        // Reset history and redoHistory
+                        history = Array.from(draw.children());
+                        redoHistory = [];
+
+                        // Optionally, load boundary conditions and color velocities if stored
+                        // For this, additional code is needed to load the JSON data
+                    };
+                    reader.readAsText(file);
+                } else {
+                    alert('Please select a valid SVG file.');
+                }
+            };
+        }
+
+        function testAboveGeometry() {
+            // Save the current SVG and data
+            saveSVG(() => {
+                // After saving, load the data from the specified file
+                let testFileName = testFileNameInput.value.trim();
+                if (!testFileName.endsWith('.svg')) {
+                    testFileName += '.svg';
+                }
+
+                fetch('/load_svg_data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename: testFileName })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Load the SVG content into the canvas
+                        draw.clear();
+                        draw.svg(data.svgContent);
+
+                        // Load boundary conditions and color velocities
+                        loadBoundaryConditions(data.boundaries);
+                        loadColorVelocities(data.colorVelocities);
+
+                        // Update history and redoHistory
+                        history = Array.from(draw.children());
+                        redoHistory = [];
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while loading the geometry.');
+                });
+            });
+        }
+
+        function simulate() {
+            let testFileName = testFileNameInput.value.trim();
+            if (!testFileName.endsWith('.svg')) {
+                testFileName += '.svg';
+            }
+
+            fetch('/simulate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filename: testFileName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Simulation completed successfully.');
+                    // Optionally, display simulation results
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred during simulation.');
+            });
+        }
+
+        function loadBoundaryConditions(boundaries) {
+            ['top', 'bottom', 'left', 'right'].forEach(edge => {
+                const boundary = boundaries[edge];
+                document.getElementById(`${edge}-boundary`).value = boundary.type;
+                toggleBoundaryInputs(edge);
+                if (boundary.type === 'velocity') {
+                    document.getElementById(`${edge}-magnitude`).value = boundary.magnitude;
+                    document.getElementById(`${edge}-direction`).value = boundary.direction;
+                }
+            });
+        }
+
+        function loadColorVelocities(colorVelocities) {
+            colorItems.forEach(item => {
+                const color = item.getAttribute('data-color');
+                if (colorVelocities[color]) {
+                    item.querySelector('.color-magnitude').value = colorVelocities[color].magnitude;
+                    item.querySelector('.color-direction').value = colorVelocities[color].direction;
+                }
+            });
+        }
+
+    </script>
+</body>
+</html>
