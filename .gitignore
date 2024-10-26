@@ -1,2 +1,5 @@
 outputs/*
 .DS_Store
+__pycache__
+svg_outputs
+sim_outputs

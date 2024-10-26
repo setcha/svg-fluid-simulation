@@ -5,6 +5,9 @@ import subprocess
 from PIL import Image
 import numpy as np
 
+from simulate import run_simulation
+from utils import process_svg
+
 app = Flask(__name__)
 
 # Ensure the outputs directory exists
@@ -95,63 +98,6 @@ def simulate():
     except Exception as e:
         print(f"Simulation error: {e}")  # Print exception details
         return jsonify({'success': False, 'message': str(e)})
-
-def process_svg(svg_path):
-    """
-    Processes the SVG file and creates separate geometry arrays for each color.
-
-    Returns:
-    - geometries: Dictionary mapping colors to NumPy arrays representing the geometry.
-    """
-    # Convert SVG to PNG using rsvg-convert
-    png_filename = svg_path.replace('.svg', '.png')
-    try:
-        subprocess.run(["rsvg-convert", svg_path, "-o", png_filename], check=True)
-    except subprocess.CalledProcessError:
-        raise Exception("Error: 'rsvg-convert' failed. Please ensure it is installed and accessible.")
-
-    # Load PNG image
-    try:
-        image = Image.open(png_filename).convert('RGBA')
-        image_array = np.array(image)
-    except Exception as e:
-        raise Exception(f"Error loading PNG image: {e}")
-
-    # Extract unique colors (excluding alpha = 0)
-    pixels = image_array.reshape(-1, 4)
-    # Only consider pixels where alpha > 0
-    pixels = pixels[pixels[:, 3] > 0]
-    unique_colors = np.unique(pixels[:, :3], axis=0)
-
-    geometries = {}
-
-    for color in unique_colors:
-        # Create a mask for the current color
-        mask = np.all(image_array[:, :, :3] == color, axis=-1)
-
-        # Store the geometry array
-        color_hex = '#{:02x}{:02x}{:02x}'.format(*color)
-        geometries[color_hex] = mask.astype(np.uint8)
-
-    return geometries
-
-def run_simulation(geometries, json_data):
-    """
-    Runs the simulation using the geometries and boundary conditions.
-
-    Returns:
-    - results: Simulation results (modify as needed).
-    """
-    # Access boundary conditions and color velocities
-    boundaries = json_data['boundaries']
-    color_velocities = json_data['colorVelocities']
-
-    # Implement your simulation logic here
-    # For example, you might iterate over the geometries and apply velocities
-
-    # Placeholder for simulation results
-    results = {}
-    return results
-
+    
 if __name__ == '__main__':
     app.run(debug=True)
