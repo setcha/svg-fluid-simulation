@@ -2,6 +2,7 @@ import os
 import imageio
 import numpy as np
 import subprocess
+from PIL import Image
 
 def make_gif_from_images(base_folder, identifier, gif_name, image_type='png', fps=50):
 

@@ -5,7 +5,6 @@ import jax.numpy as jnp
 from jax import jit, device_count
 import numpy as np
 from time import time
-from PIL import Image
 import svgwrite
 import io
 import matplotlib.pyplot as plt
@@ -147,19 +146,18 @@ def make_params(m_per_pixel=1e-4, seconds_of_simulation=0.005, seconds_per_frame
 
 class SVGSim(BGKSim):
     def __init__(self, **kwargs):
-        self.horizontal_input_velocity = kwargs['horizontal_input_velocity']
         self.total_sim_length_steps = kwargs['total_sim_length_steps']
         self.total_sim_length_p = kwargs['total_sim_length_p']
         self.save_vtk = kwargs['save_vtk']
-
         self.ΔX_P = kwargs['ΔX_P']
         self.ΔT_P = kwargs['ΔT_P']
         self.ΔM_P = kwargs['ΔM_P']
         self.arrow_density = kwargs['arrow_density']
         #self.lattice_scale = kwargs['lattice_scale']
         self.geometry = kwargs['geometry']
+        self.boundaries = kwargs['boundaries']
+        self.color_velocities = kwargs['color_velocities']
         super().__init__(**kwargs)
-
 
         #recording (make this a separate class or function or something)
         self.times = []
@@ -173,48 +171,55 @@ class SVGSim(BGKSim):
 
     def convert_to_physical_units(self, value, length = 0, time = 0, mass = 0):
         return value * (self.ΔX_P ** length) * (self.ΔT_P ** time) * (self.ΔM_P ** mass)
+    
+    def convert_geometry_to_tuple(geometry):
+        point_tuples = np.argwhere(geometry).T
+        return (tuple(point_tuples[1]), tuple(point_tuples[0]))
         
     def set_boundary_conditions(self):
-
-        # No-slip conditions at the top and bottom
-        wall = np.concatenate([self.boundingBoxIndices['bottom'],
-                               self.boundingBoxIndices['top'],
-                               self.boundingBoxIndices['left'],
-                               self.boundingBoxIndices['right'],
-                               ])
-        vel_wall = np.zeros(wall.shape, dtype=self.precisionPolicy.compute_dtype)
-        self.BCs.append(Regularized(tuple(wall.T), self.gridInfo, self.precisionPolicy, 'velocity', vel_wall))
-
-        # # Add a middle piece of geometry that propels the fluid around
-        # the fluidic geometry BC with prescribed velocity
-        print(f"{self.boundingBoxIndices['left']=}")
-        print(f"{geometry=}")
-
-        inlet = geometry
-        vel_inlet = np.zeros((len(inlet[0]),2), dtype=self.precisionPolicy.compute_dtype)
-        vel_inlet[:, 0] = self.horizontal_input_velocity
-        self.BCs.append(Regularized(inlet, self.gridInfo, self.precisionPolicy, 'velocity', vel_inlet))
-    
-
-    def prescribed_velocity_profile(self, y, y_min, y_max):
-        # Parabolic Poiseuille flow profile
-        umax = self.horizontal_input_velocity  # Maximum velocity at the center
-        return 4 * umax * (y - y_min) * (y_max - y) / ((y_max - y_min) ** 2)
-    
-    def linear_velocity_change_creator(self, boundary, start_vel, end_vel, total_timesteps, timesteps_per_increment=1):
         """
-        Increase velocity linearly from start_vel to end_vel over total_timesteps.
-        Will only increment every timesteps_per_increment steps
+        Set the boundary conditions for all edges of the domain and all specified geometries.
         """
-        indices = tuple(boundary.T)
-        def linear_velocity_change(timestep):
-            vel_prescribed = jnp.zeros(boundary.shape, dtype=self.precisionPolicy.compute_dtype)
-            # do increases in velocity at discrete timesteps
-            timestep = timestep - timestep%timesteps_per_increment
-            vel_prescribed = vel_prescribed.at[:, 0].set(timestep * (end_vel - start_vel)/total_timesteps + start_vel)
-            #vel_prescribed[:, 0] = timestep * (end_vel - start_vel)/total_timesteps + start_vel
-            return indices, vel_prescribed
-        return linear_velocity_change
+        #set each of the color velocities
+        for color, color_geometry in self.geometry.items():
+            #color_geometry = self.geometry[color]
+            color_velocity = self.color_velocities[color]
+            # find the proper velocity
+            x_component_vel = color_velocity['magnitude'] * np.cos(color_velocity['direction'])
+            y_component_vel = color_velocity['magnitude'] * np.sin(color_velocity['direction'])
+
+
+
+
+
+            #fix the tuple problem
+
+
+
+
+
+            # convert the numpy array to coordinate tuples
+            tupled_color_geometry = SVGSim.convert_geometry_to_tuple(color_geometry)
+            # set the boundary condition
+            vel_geometry = np.zeros(tupled_color_geometry.shape, dtype=self.precisionPolicy.compute_dtype)
+            vel_geometry[:, 0] = x_component_vel
+            vel_geometry[:, 1] = y_component_vel
+            self.BCs.append(Regularized(tupled_color_geometry, self.gridInfo, self.precisionPolicy, 'velocity', vel_geometry))
+
+        #Add the boundary conditions for the 
+        for boundary_name, boundary_info in self.boundaries:
+            boundary = self.boundingBoxIndices[boundary_name]
+            #default of 'wall' gives no-slip condition
+            x_component_vel = 0
+            y_component_vel = 0
+            if boundary_info['type'] == 'velocity':
+                # find the proper velocity
+                x_component_vel = boundary_info['magnitude'] * np.cos(boundary_info['direction'])
+                y_component_vel = boundary_info['magnitude'] * np.sin(boundary_info['direction'])
+            vel_geometry = np.zeros(boundary.shape, dtype=self.precisionPolicy.compute_dtype)
+            vel_geometry[:, 0] = x_component_vel
+            vel_geometry[:, 1] = y_component_vel
+            self.BCs.append(Regularized(tupled_color_geometry, self.gridInfo, self.precisionPolicy, 'velocity', vel_geometry))
 
     def output_data(self, **kwargs):
         # Extract the fields
@@ -462,17 +467,30 @@ def run_simulation(geometries, json_data, output_folder = 'simulation_outputs/te
     boundaries = json_data['boundaries']
     color_velocities = json_data['colorVelocities']
 
-    
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     delete_files_in_directory(output_folder)
 
-    params = make_params(m_per_pixel=1e-4, seconds_of_simulation=0.005, seconds_per_frame_p=1e-4, feature_size_p=0.006)
-    params['geometries'] = geometries
-    params['boundaries'] = boundaries
-    params['color_velocities'] = color_velocities
+    max_input_flow_velocity = max([flow_info["magnitude"] for color_name, flow_info in color_velocities.items()])
+    params = make_params(m_per_pixel=1e-4, seconds_of_simulation=0.005, seconds_per_frame_p=1e-4,
+                         fluid_flow_velocity=max_input_flow_velocity, feature_size_p=0.006)
+    # params['geometry'] = geometries
+    # params['boundaries'] = boundaries
+    # params['color_velocities'] = color_velocities
+    first_geometry = list(geometries.values())[0]
+    NX = first_geometry.shape[1]
+    NY = first_geometry.shape[0]
+    params.update({
+        'geometry':geometries,
+        'boundaries':boundaries,
+        'color_velocities':color_velocities,
+        'nx': NX,
+        'ny': NY,
+        'nz': 0,
+    })
 
     sim_start = time()
+    print("here")
     sim = SVGSim(**params)
     sim.run(params['total_sim_length_steps'])
     sim_end = time()
