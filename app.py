@@ -79,25 +79,25 @@ def simulate():
     if not os.path.exists(svg_path) or not os.path.exists(json_path):
         return jsonify({'success': False, 'message': 'File not found.'})
 
-    try:
-        # Load SVG and JSON data
-        with open(svg_path, 'r') as f:
-            svg_content = f.read()
+    #try:
+    # Load SVG and JSON data
+    with open(svg_path, 'r') as f:
+        svg_content = f.read()
 
-        with open(json_path, 'r') as f:
-            json_data = json.load(f)
+    with open(json_path, 'r') as f:
+        json_data = json.load(f)
 
-        # Process SVG and create geometry arrays
-        geometries = process_svg(svg_path)
+    # Process SVG and create geometry arrays
+    geometries = process_svg(svg_path)
 
-        # Run the simulation
-        results = run_simulation(geometries, json_data)
+    # Run the simulation
+    results = run_simulation(geometries, json_data)
 
-        # Optionally, save or return results
-        return jsonify({'success': True, 'results': results})
-    except Exception as e:
-        print(f"Simulation error: {e}")  # Print exception details
-        return jsonify({'success': False, 'message': str(e)})
+    # Optionally, save or return results
+    return jsonify({'success': True, 'results': results})
+    # except Exception as e:
+    #     print(f"Simulation error: {e}")  # Print exception details
+    #     return jsonify({'success': False, 'message': str(e)})
     
 if __name__ == '__main__':
     app.run(debug=True)

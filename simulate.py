@@ -188,26 +188,19 @@ class SVGSim(BGKSim):
             x_component_vel = color_velocity['magnitude'] * np.cos(color_velocity['direction'])
             y_component_vel = color_velocity['magnitude'] * np.sin(color_velocity['direction'])
 
-
-
-
-
             #fix the tuple problem
-
-
-
-
 
             # convert the numpy array to coordinate tuples
             tupled_color_geometry = SVGSim.convert_geometry_to_tuple(color_geometry)
             # set the boundary condition
-            vel_geometry = np.zeros(tupled_color_geometry.shape, dtype=self.precisionPolicy.compute_dtype)
+            vel_geometry = np.zeros_like(tupled_color_geometry, dtype=self.precisionPolicy.compute_dtype).T
             vel_geometry[:, 0] = x_component_vel
             vel_geometry[:, 1] = y_component_vel
+            print(vel_geometry)
             self.BCs.append(Regularized(tupled_color_geometry, self.gridInfo, self.precisionPolicy, 'velocity', vel_geometry))
 
         #Add the boundary conditions for the 
-        for boundary_name, boundary_info in self.boundaries:
+        for boundary_name, boundary_info in self.boundaries.items():
             boundary = self.boundingBoxIndices[boundary_name]
             #default of 'wall' gives no-slip condition
             x_component_vel = 0
