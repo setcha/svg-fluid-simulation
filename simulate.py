@@ -173,6 +173,7 @@ class SVGSim(BGKSim):
         return value * (self.ΔX_P ** length) * (self.ΔT_P ** time) * (self.ΔM_P ** mass)
     
     def convert_geometry_to_tuple(geometry):
+        print(np.argwhere(geometry == 0))
         point_tuples = np.argwhere(geometry).T
         return (tuple(point_tuples[1]), tuple(point_tuples[0]))
         
@@ -196,7 +197,9 @@ class SVGSim(BGKSim):
             vel_geometry = np.zeros_like(tupled_color_geometry, dtype=self.precisionPolicy.compute_dtype).T
             vel_geometry[:, 0] = x_component_vel
             vel_geometry[:, 1] = y_component_vel
-            print(vel_geometry)
+            #print(f"{vel_geometry=}")
+            #print(f"{vel_geometry.shape=}")
+            #print(f"{np.array(tupled_color_geometry).shape=}")
             self.BCs.append(Regularized(tupled_color_geometry, self.gridInfo, self.precisionPolicy, 'velocity', vel_geometry))
 
         #Add the boundary conditions for the 
