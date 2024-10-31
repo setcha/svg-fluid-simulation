@@ -157,6 +157,7 @@ class SVGSim(BGKSim):
         self.geometry = kwargs['geometry']
         self.boundaries = kwargs['boundaries']
         self.color_velocities = kwargs['color_velocities']
+        self.output_folder = kwargs['output_folder']
         super().__init__(**kwargs)
 
         #recording (make this a separate class or function or something)
@@ -173,7 +174,6 @@ class SVGSim(BGKSim):
         return value * (self.ΔX_P ** length) * (self.ΔT_P ** time) * (self.ΔM_P ** mass)
     
     def convert_geometry_to_tuple(geometry):
-        print(np.argwhere(geometry == 0))
         point_tuples = np.argwhere(geometry).T
         return (tuple(point_tuples[1]), tuple(point_tuples[0]))
         
@@ -183,14 +183,10 @@ class SVGSim(BGKSim):
         """
         #set each of the color velocities
         for color, color_geometry in self.geometry.items():
-            #color_geometry = self.geometry[color]
             color_velocity = self.color_velocities[color]
             # find the proper velocity
             x_component_vel = color_velocity['magnitude'] * np.cos(color_velocity['direction'])
             y_component_vel = color_velocity['magnitude'] * np.sin(color_velocity['direction'])
-
-            #fix the tuple problem
-
             # convert the numpy array to coordinate tuples
             tupled_color_geometry = SVGSim.convert_geometry_to_tuple(color_geometry)
             # set the boundary condition
@@ -198,8 +194,8 @@ class SVGSim(BGKSim):
             vel_geometry[:, 0] = x_component_vel
             vel_geometry[:, 1] = y_component_vel
             #print(f"{vel_geometry=}")
-            #print(f"{vel_geometry.shape=}")
-            #print(f"{np.array(tupled_color_geometry).shape=}")
+            print(f"{vel_geometry.shape=}")
+            print(f"{np.array(tupled_color_geometry).shape=}")
             self.BCs.append(Regularized(tupled_color_geometry, self.gridInfo, self.precisionPolicy, 'velocity', vel_geometry))
 
         #Add the boundary conditions for the 
@@ -215,7 +211,9 @@ class SVGSim(BGKSim):
             vel_geometry = np.zeros(boundary.shape, dtype=self.precisionPolicy.compute_dtype)
             vel_geometry[:, 0] = x_component_vel
             vel_geometry[:, 1] = y_component_vel
-            self.BCs.append(Regularized(tupled_color_geometry, self.gridInfo, self.precisionPolicy, 'velocity', vel_geometry))
+            print(f"{vel_geometry.shape=}")
+            print(f"{boundary.shape=}")
+            self.BCs.append(Regularized(tuple(boundary.T), self.gridInfo, self.precisionPolicy, 'velocity', vel_geometry))
 
     def output_data(self, **kwargs):
         # Extract the fields
@@ -246,19 +244,19 @@ class SVGSim(BGKSim):
         # Save the fields for visualization in VTK format
         fields = {"rho": rho, "u_x": u_x, "u_y": u_y}
         if self.save_vtk:
-            save_fields_vtk(timestep, fields, prefix=OUTPUT_FOLDER)
+            save_fields_vtk(timestep, fields, prefix=self.output_folder)
 
         # Save images of the velocity field using the save_image function
         #save_image(timestep, u, prefix=OUTPUT_FOLDER)
         time_in_seconds = timestep / self.total_sim_length_steps * self.total_sim_length_p
         start_image_time = time()
-        self.save_image_with_info(timestep, u, prefix=OUTPUT_FOLDER + "u",
+        self.save_image_with_info(timestep, u, prefix=self.output_folder + "u",
                              time_in_seconds=time_in_seconds,
-                             vmin=0, vmax=max(u_magnitude.max(), 20*self.horizontal_input_velocity),
+                             vmin=0, vmax=max(u_magnitude.max(), 20*0.01), #FIX THIS
                              density=self.arrow_density,
                              cbar_label='Velocity (m/s)'
                              )
-        self.save_image_with_info(timestep, rho, prefix=OUTPUT_FOLDER + "rho",
+        self.save_image_with_info(timestep, rho, prefix=self.output_folder + "rho",
                              time_in_seconds=time_in_seconds,
                              #vmin=0, vmax=2, #max(u_magnitude.max(), 10*self.horizontal_input_velocity),
                              cbar_label='Pressure (PSI)'
@@ -477,6 +475,7 @@ def run_simulation(geometries, json_data, output_folder = 'simulation_outputs/te
     NX = first_geometry.shape[1]
     NY = first_geometry.shape[0]
     params.update({
+        'output_folder':output_folder,
         'geometry':geometries,
         'boundaries':boundaries,
         'color_velocities':color_velocities,

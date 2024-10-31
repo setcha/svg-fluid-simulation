@@ -72,11 +72,16 @@ def process_svg(svg_path):
     geometries = {}
 
     for color in unique_colors:
-        # Create a mask for the current color
-        mask = np.all(image_array[:, :, :3] == color, axis=-1)
+        # Create a mask for the current color, where alpha is greater than 0
+        mask = np.all(image_array[:, :, :3] == color, axis=-1) & (image_array[:, :, 3] > 0)
 
         # Store the geometry array
         color_hex = '#{:02x}{:02x}{:02x}'.format(*color)
         geometries[color_hex] = mask.astype(np.uint8)
 
     return geometries
+
+
+if __name__ == '__main__':
+    geometries = process_svg("outputs/output.svg")
+    print(np.argwhere(geometries['#000000']).shape)
